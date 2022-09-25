@@ -31,14 +31,13 @@ set_arsenic_log_level()
 
 
 async def prod_parse_dut(url, sema):
-    store_name = 'KC'
     service = services.Chromedriver()
     browser = browsers.Chrome()
     browser.capabilities = {"goog:chromeOptions": {"args": ["--disable-logging", "--silent"]}}
 
     async with sema, get_session(service, browser) as session:
         await session.get(url)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.01)
         total_height = int(await session.execute_script("return document.body.scrollHeight"))
         for i in range(1, total_height, 5):
             await session.execute_script("window.scrollTo(0, {});".format(i))
@@ -52,11 +51,6 @@ async def prod_parse_dut(url, sema):
         for data in soup(['svg', 'path', ' style', 'script']):
             # Remove tags
             data.decompose()
-        '''
-        #write the soup to a file
-        with open(f'soups/soup_dut_test.html', 'w', encoding="utf-8") as f:
-            f.write(soup.prettify())
-        '''
 
         '''parse the product divs'''
         for product_div in product_divs:
@@ -65,14 +59,54 @@ async def prod_parse_dut(url, sema):
                 prod_href = None
                 prod_link_tag = product_div.find("a", href=True)
                 href = prod_link_tag['href']
-                print(href)
-                prod_href = f'href="http://www.dutchie.com{href}'
+                prod_href = f'href="http://www.dutchie.com{href}"'
                 print(f'HREF: {prod_href}')
             except Exception as error:
                 await write_error('product_div', url, error)
             finally:
                 if prod_href is None:
                     await write_error('product_div', url, 'NONE TYPE')
+                    return
+
+            print(f'\n\n{url}')
+
+            '''get store location'''
+            try:
+                store_location = None
+                store_location = prod_href.split('/')
+                store_location = store_location[4]
+                store_location = store_location.replace('-', ' ')
+                store_location = store_location.title()
+                store_location = store_location.replace('O', 'o')
+                print(f'Store Location: {store_location}')
+            except Exception as error:
+                await write_error(f'store_location\n{prod_href}', url, error)
+            finally:
+                if store_location is None:
+                    await write_error('store_location', url, 'NONE TYPE')
+                    return
+
+            '''get store zip'''
+            try:
+                store_zip = None
+                with open('zipcodes.csv', 'r') as f_zips:
+                    zips = csv.reader(f_zips, delimiter=',')
+                    word_list = store_location.split(' ')
+
+                    for zip_line in zips:
+                        if store_zip is None:
+                            town = zip_line[1]
+                            for word in word_list:
+                                word = word.upper()
+                                if 'OF' not in word:
+                                    if word.upper() in town:
+                                        store_zip = zip_line[0]
+                                        print(f'Store Zip: {store_zip}')
+            except Exception as error:
+                await write_error(f'store_zip\n{store_zip}', url, error)
+            finally:
+                if store_zip is None:
+                    await write_error('store_zip', url, 'NONE TYPE')
                     return
 
             '''get type flower/fine grind/cache/etc...'''
@@ -106,9 +140,10 @@ async def prod_parse_dut(url, sema):
                 for chars in chars_to_strip:
                     prod_name = prod_name.replace(chars, '')
 
+                prod_name = f'<a {prod_href}>{prod_name}</a><br>' \
+                            f'<a href=\"https://www.leafly.com/search?q={prod_name}\">Leafly</a>'
+
                 print(f"Name: {prod_name}")
-                prod_name = f'<a {prod_href}">{prod_name}</a><br>' \
-                            f'<a href="https://www.leafly.com/search?q={prod_name}">Leafly</a>'
             except Exception as error:
                 await write_error('product_name', url, error)
             finally:
@@ -116,8 +151,18 @@ async def prod_parse_dut(url, sema):
                     await write_error('product_name', url, 'NONE TYPE')
                     return
 
-                '''get species indica/sativa/hybrid'''
-                prod_strain = 'NEED TO PARSE THIS'
+            '''get species indica/sativa/hybrid'''
+            try:
+                prod_strain = url.split('=')
+                prod_strain = prod_strain[1]
+                prod_strain = prod_strain.capitalize()
+                print(f'Strain: {prod_strain}')
+            except Exception as error:
+                await write_error(f'product_strain', url, error)
+            finally:
+                if prod_name is None:
+                    await write_error('product_strain', url, 'NONE TYPE')
+                    return
 
             '''get grower'''
             try:
@@ -217,7 +262,8 @@ async def prod_parse_dut(url, sema):
                     await write_error('product_total_cost_per_mg', url, 'NONE TYPE')
                     return
             try:
-                row = [f'{store_name}',
+                row = [f'{store_location}',
+                       f'{store_zip}',
                        f'{prod_name}',
                        f'{prod_strain}',
                        f'{prod_grower}',
@@ -232,7 +278,7 @@ async def prod_parse_dut(url, sema):
                 return
 
             with open('prod_csv_dut.text', 'a', newline='') as csvfile:
-                csv_writer = csv.writer(csvfile, delimiter=',')
+                csv_writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE, quotechar='', escapechar='\\')
                 csv_writer.writerow(row)
 
 

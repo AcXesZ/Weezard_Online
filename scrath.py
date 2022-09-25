@@ -1,10 +1,22 @@
-import re
+import csv
 
-string = 'THC:�13.099%��|��CBD:�9.809%'
+words = str('Ethos of Allentown')
+print(words)
 
-string = string.split('%')
-string = string[0]
-print(string)
-non_decimal = re.compile(r'[^\d.]+')
-string = float(non_decimal.sub('', string))
-print(string)
+word_list = words.split(' ')
+print(word_list)
+
+with open('zipcodes.csv', 'r') as f_zips:
+    zips = csv.reader(f_zips, delimiter=',')
+
+    store_zip = None
+    for line in zips:
+        if store_zip is None:
+            town = line[1]
+            for word in word_list:
+                word = word.upper()
+                if 'OF' not in word:
+                    if word.upper() in town:
+                        store_zip = line[0]
+                        print(store_zip)
+
