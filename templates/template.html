@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>The Weezard</title>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/jszip-2.5.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/b-html5-2.2.3/cr-1.5.6/fh-3.2.4/r-2.3.0/sc-2.0.7/datatables.min.css"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family='Yanone Kaffeesatz'">
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/jszip-2.5.0/dt-1.12.1/b-2.2.3/b-colvis-2.2.3/b-html5-2.2.3/cr-1.5.6/fh-3.2.4/r-2.3.0/sc-2.0.7/datatables.min.js"></script>
+
+        <script type="text/javascript">$(document).ready( function () {
+                                            var table = $('#table_id').DataTable( {
+                                            columnDefs: [{
+                                                    target: 0,
+                                                    visible: false,
+                                                    searchable: false,
+                                            }],
+
+                                            colReorder: true,
+                                            fixedHeader: true,
+                                            scrollY:     200,
+                                            "paging": false,
+                                            responsive: false
+                                        });
+
+                                        $('a.toggle-vis').on('click', function (e) {
+                                            e.preventDefault();
+
+                                            // Get the column API object
+                                            var column = table.column($(this).attr('data-column'));
+
+                                            // Toggle the visibility
+                                            column.visible(!column.visible());
+                                        });
+
+                                       });</script>
+        <link rel="stylesheet"
+              href="https://fonts.googleapis.com/css2?family=Crimson+Pro">
+        <style>
+          body {
+            font-family: 'Yanone Kaffeesatz', sans-serif;
+            background: no-repeat url("imgs/bg.jpg");
+          }
+
+          .toggle-vis {
+          text-decoration: underline;
+          }
+        </style>
+    </head>
+    <body>
+    <div>
+        Toggle column:  <a class="toggle-vis" data-column="0">ID</a> -
+                        <a class="toggle-vis" data-column="1">Store</a> -
+                        <a class="toggle-vis" data-column="2">Name</a> -
+                        <a class="toggle-vis" data-column="3">Strain</a> -
+                        <a class="toggle-vis" data-column="4">Grower</a> -
+                        <a class="toggle-vis" data-column="5">Type</a> -
+                        <a class="toggle-vis" data-column="6">Price</a> -
+                        <a class="toggle-vis" data-column="7">Weight</a> -
+                        <a class="toggle-vis" data-column="8">THC%</a> -
+                        <a class="toggle-vis" data-column="9">THC mg</a> -
+                        <a class="toggle-vis" data-column="10">$/mg</a> -
+
+    </div>
+        {{body}}
+    </body>
+</html>
