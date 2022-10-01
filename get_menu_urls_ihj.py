@@ -59,7 +59,7 @@ async def find_pa(url, html):
 
 
 async def spawn_task(urls,):
-    sema = asyncio.BoundedSemaphore(7)
+    sema = asyncio.BoundedSemaphore(6)
     tasks = []
     for url in urls:
         tasks.append(asyncio.create_task(scraper(url, sema)))
@@ -69,7 +69,7 @@ async def spawn_task(urls,):
 def main():
 
     urls = []
-    for store_number in range(9100, 9999):
+    for store_number in range(4600, 9999):
         url = f'https://www.iheartjane.com/embed/stores/{store_number}/menu'
         urls.append(url)
 

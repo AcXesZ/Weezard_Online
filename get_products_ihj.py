@@ -36,6 +36,7 @@ async def prod_parse_ihj(url, sema):
     browser.capabilities = {"goog:chromeOptions": {"args": ["--headless", "--disable-logging", "--silent"]}}
 
     # class names
+    cn_prod_div = "css-13v290s"
     cn_link = "css-6tz98n"
     cn_href = "css-1fbb79j"
     cn_grower = "css-1ad3qm0"
@@ -47,16 +48,16 @@ async def prod_parse_ihj(url, sema):
     cn_weight = "css-lh59bd"
 
     async with sema, get_session(service, browser) as session:
-        '''print(f'Trying: {url}')'''
+        print(f'Trying: {url}')
         await session.get(url)
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
 
         html = await session.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(html, "html.parser")
         '''print(f'{soup.prettify()}')'''
 
         # get all the product divs
-        product_divs = soup.find_all("div", class_="css-1alyybx")
+        product_divs = soup.find_all("div", class_=cn_prod_div)
 
         for data in soup(['svg', 'path', ' style', 'script', 'img', 'button']):
             # Remove tags
@@ -68,7 +69,7 @@ async def prod_parse_ihj(url, sema):
                 # get link
                 prod_link_tag = product_div.find("span", class_=cn_link).find("a", href=True)
                 prod_href = prod_link_tag['href']
-                '''print(f'HREF: {prod_href}')'''
+                print(f'HREF: {prod_href}')
             except Exception as error:
                 await write_error('product_div', url, error)
             finally:
@@ -81,7 +82,7 @@ async def prod_parse_ihj(url, sema):
                 prod_name = None
                 prod_name = product_div.find("div", class_=cn_href).text
                 prod_name = prod_name.strip('|')
-                '''print(f"Name: {prod_name}")'''
+                print(f'Name: {prod_name}')
                 prod_name = f'<a href="http://www.iheartjane.com{prod_href}">{prod_name}</a><br>' \
                             f'<a href="https://www.leafly.com/search?q={prod_name}">Leafly</a>'
             except Exception as error:
@@ -98,18 +99,18 @@ async def prod_parse_ihj(url, sema):
                 await write_error(f'prod_strain\n{prod_strain}', url, error)
             finally:
                 if prod_strain is None:
-                    await write_error('product_div', url, 'NONE TYPE')
+                    await write_error('product_strain', url, 'NONE TYPE')
                     return
 
             '''get grower'''
             try:
-                prod_strain = None
+                prod_grower = None
                 prod_grower = product_div.find("div", class_=cn_grower).text
                 '''print(f"Grower: {prod_grower}")'''
             except Exception as error:
                 await write_error(f'prod_grower\n{prod_grower}', url, error)
             finally:
-                if prod_strain is None:
+                if prod_grower is None:
                     await write_error('product_div', url, 'NONE TYPE')
                     return
 
