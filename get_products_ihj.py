@@ -5,14 +5,14 @@ import time
 import asyncio
 import logging
 import structlog
-import traceback
 import csv
 
-with open('errors.html', 'w') as f:
-    f.write(f'')
+with open('prod_errors_ihj.text', 'w') as f:
+    f.write('')
 
 with open('prod_csv_ihj.text', 'w') as f:
     f.write(f'')
+
 
 def set_arsenic_log_level(level=logging.ERROR):
     # Create logger
@@ -47,13 +47,13 @@ async def prod_parse_ihj(url, sema):
     cn_weight = "css-lh59bd"
 
     async with sema, get_session(service, browser) as session:
-        #print(f'Trying: {url}')
+        '''print(f'Trying: {url}')'''
         await session.get(url)
         await asyncio.sleep(3)
 
         html = await session.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(html, "html.parser")
-        #print(f'{soup.prettify()}')
+        '''print(f'{soup.prettify()}')'''
 
         # get all the product divs
         product_divs = soup.find_all("div", class_="css-1alyybx")
@@ -62,41 +62,84 @@ async def prod_parse_ihj(url, sema):
             # Remove tags
             data.decompose()
 
-        '''write the soup to a file
-        with open(f'./soups/soup_ihj_{filter}.html', 'w', encoding="utf-8") as f:
-            f.write(soup.prettify())'''
-
         # parse the product divs
         for product_div in product_divs:
             try:
-
                 # get link
                 prod_link_tag = product_div.find("span", class_=cn_link).find("a", href=True)
                 prod_href = prod_link_tag['href']
-                #print(f'HREF: {prod_href}')
+                '''print(f'HREF: {prod_href}')'''
+            except Exception as error:
+                await write_error('product_div', url, error)
+            finally:
+                if prod_href is None:
+                    await write_error('product_div', url, 'NONE TYPE')
+                    return
 
-                # get name
+            '''get name'''
+            try:
+                prod_name = None
                 prod_name = product_div.find("div", class_=cn_href).text
                 prod_name = prod_name.strip('|')
-                #print(f"Name: {prod_name}")
-                prod_name = f'<a href="http://www.iheartjane.com{prod_href}">{prod_name}</a><br><a href="https://www.leafly.com/search?q={prod_name}">Leafly</a>'
+                '''print(f"Name: {prod_name}")'''
+                prod_name = f'<a href="http://www.iheartjane.com{prod_href}">{prod_name}</a><br>' \
+                            f'<a href="https://www.leafly.com/search?q={prod_name}">Leafly</a>'
+            except Exception as error:
+                await write_error(f'product_name\n{prod_name}', url, error)
+            finally:
+                if prod_name is None:
+                    await write_error('product_name', url, 'NONE TYPE')
+                    return
 
-                # get species indica/sativa/hybrid
+            '''get species indica/sativa/hybrid'''
+            try:
                 prod_strain = filter
+            except Exception as error:
+                await write_error(f'prod_strain\n{prod_strain}', url, error)
+            finally:
+                if prod_strain is None:
+                    await write_error('product_div', url, 'NONE TYPE')
+                    return
 
-                # get grower
+            '''get grower'''
+            try:
+                prod_strain = None
                 prod_grower = product_div.find("div", class_=cn_grower).text
-                #print(f"Grower: {prod_grower}")
+                '''print(f"Grower: {prod_grower}")'''
+            except Exception as error:
+                await write_error(f'prod_grower\n{prod_grower}', url, error)
+            finally:
+                if prod_strain is None:
+                    await write_error('product_div', url, 'NONE TYPE')
+                    return
 
-                # get type flower/fine grind/cache/etc...
+                '''get type flower/fine grind/cache/etc...'''
+            try:
+                prod_type = None
                 prod_type = product_div.find("div", class_=cn_type_container).find("div", class_=cn_type).text
-                #print(f"Type: {prod_type}")
+                '''print(f"Type: {prod_type}")'''
+            except Exception as error:
+                await write_error(f'prod_type\n{prod_type}', url, error)
+            finally:
+                if prod_type is None:
+                    await write_error('product_type', url, 'NONE TYPE')
+                    return
 
-                # get price
+            '''get price'''
+            try:
+                prod_price = None
                 prod_price = float(product_div.find("p", class_=cn_price).text[1:6])
-                #print(f"Price : {prod_price:.2f}")
+                '''print(f"Price : {prod_price:.2f}")'''
+            except Exception as error:
+                await write_error(f'prod_price\n{prod_price}', url, error)
+            finally:
+                if prod_price is None:
+                    await write_error('product_price', url, 'NONE TYPE')
+                    return
 
-                # get thc%
+            '''get thc%'''
+            try:
+                prod_thc = None
                 prod_thc = product_div.find("div", class_=cn_thc_container).find("div", class_=cn_thc).text
                 print(f"RAW %THC : {prod_thc}")
                 if 'THCa' in prod_thc:
@@ -114,11 +157,17 @@ async def prod_parse_ihj(url, sema):
                     print(prod_thc)
                     non_decimal = re.compile(r'[^\d.]+')
                     prod_thc = float(non_decimal.sub('', prod_thc))
+                    '''print(f"%THC : {prod_thc}")'''
+            except Exception as error:
+                await write_error(f'prod_thc\n{prod_thc}', url, error)
+            finally:
+                if prod_thc is None:
+                    await write_error('product_thc', url, 'NONE TYPE')
+                    return
 
-
-                print(f"%THC : {prod_thc}")
-
-                # get weight
+            '''get weight'''
+            try:
+                prod_weight = None
                 prod_weight = product_div.find("p", class_=cn_weight).text
                 if prod_weight == '':
                     prod_weight = 0.00
@@ -128,17 +177,40 @@ async def prod_parse_ihj(url, sema):
                 # special case: if weight is something like 1g/3.5g the expression will return 13.5
                 if prod_weight == 13.5:
                     prod_weight = 3.5
-                #print(f"Weight : {prod_weight}")
+                '''print(f"Weight : {prod_weight}")'''
+            except Exception as error:
+                await write_error(f'prod_weight\n{prod_weight}', url, error)
+            finally:
+                if prod_weight is None:
+                    await write_error('product_weight', url, 'NONE TYPE')
+                    return
 
-                # calculate total mg of thc in weight
+            '''calculate total mg of thc in weight'''
+            try:
+                prod_mg_thc = None
                 prod_mg_thc = ((prod_thc / 100) * (prod_weight * 1000))
-                #print(f"Total mG THC : {prod_mg_thc:.2f}")
+                '''print(f"Total mG THC : {prod_mg_thc:.2f}")'''
+            except Exception as error:
+                await write_error(f'prod_mg_thc\n{prod_mg_thc}', url, error)
+            finally:
+                if prod_mg_thc is None:
+                    await write_error('product_mg_thc', url, 'NONE TYPE')
+                    return
 
-                # calculate cents per milligram of thc
+            '''calculate cents per milligram of thc'''
+            try:
+                prod_price_per_mg = None
                 prod_price_per_mg = (prod_price / prod_mg_thc)
-                #print(f"Price per mg : {prod_price_per_mg:.3f}")
-                #print('\n')
+                '''print(f"Price per mg : {prod_price_per_mg:.3f}")'''
+            except Exception as error:
+                await write_error(f'prod_price_per_mg\n{prod_price_per_mg}', url, error)
+            finally:
+                if prod_mg_thc is None:
+                    await write_error('product_price_per_mg', url, 'NONE TYPE')
+                    return
 
+            '''write the row'''
+            try:
                 row = [f'{store_name}',
                        f'{prod_name}',
                        f'{prod_strain}',
@@ -149,32 +221,33 @@ async def prod_parse_ihj(url, sema):
                        f'{prod_thc:.2f}%',
                        f'{prod_mg_thc:.2f}mg',
                        f'{prod_price_per_mg:.3f}/mg']
-
                 print(row)
+            except Exception as error:
+                await write_error(f'Error writing row:', url, error)
+                return
+
+            if row is not None:
                 with open('prod_csv_ihj.text', 'a', newline='') as csvfile:
                     csv_writer = csv.writer(csvfile, delimiter=',')
                     csv_writer.writerow(row)
 
-            except Exception as error:
-                '''print(f"{error}")
-                print(product_div.text)
-                print(prod_name)'''
-                with open('errors.html', 'a') as f:
-                    f.write(f'Error: {traceback.format_exc()}\n DIV: {product_div.text}\nLink: {prod_name}\n\n')
-                await asyncio.sleep(0.25)
-
 
 async def spawn_task(urls):
-    sema = asyncio.BoundedSemaphore(7) # was 7
+    sema = asyncio.BoundedSemaphore(7)
     tasks = []
     for url in urls:
         tasks.append(asyncio.create_task(prod_parse_ihj(url, sema)))
     await asyncio.gather(*tasks)
 
 
+async def write_error(problem, url, error):
+    with open('prod_errors_ihj.text', 'a') as f_error:
+        f_error.write(f'{url}\n{problem}\n{error}\n\n')
+
+
 def main():
-    with open('urls_list_menus_ihj.text', 'r') as f:
-        url_list_ihj = f.readlines()
+    with open('urls_list_menus_ihj.text', 'r') as f_menus:
+        url_list_ihj = f_menus.readlines()
         url_list_ihj = [line.rstrip() for line in url_list_ihj]
         url_list_ihj = list(set(url_list_ihj))
         print(f'I Heart Jane has {len(url_list_ihj)} entries.')
@@ -185,9 +258,5 @@ def main():
     asyncio.run(spawn_task(url_list_ihj))
 
 
-
 if __name__ == '__main__':
     main()
-
-
-

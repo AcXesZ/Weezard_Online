@@ -99,7 +99,7 @@ async def prod_parse_dut(url, sema):
                             for word in word_list:
                                 word = word.upper()
                                 if 'OF' not in word:
-                                    if word.upper() in town:
+                                    if word in town:
                                         store_zip = zip_line[0]
                                         print(f'Store Zip: {store_zip}')
             except Exception as error:
