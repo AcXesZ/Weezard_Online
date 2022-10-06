@@ -8,7 +8,7 @@ import structlog
 import csv
 
 
-with open('prod_csv_dut.text', 'w') as f:
+with open('prod_dut.csv', 'w') as f:
     f.write('')
 
 with open('prod_errors_dut.text', 'w') as f:
@@ -277,9 +277,12 @@ async def prod_parse_dut(url, sema):
                 await write_error('row', url, error)
                 return
 
-            with open('prod_csv_dut.text', 'a', newline='') as csvfile:
+            with open('prod_dut.csv', 'a', newline='') as csvfile:
                 csv_writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE, quotechar='', escapechar='\\')
                 csv_writer.writerow(row)
+
+        await session.close()
+        await session.driver.close()
 
 
 async def spawn_task(urls):

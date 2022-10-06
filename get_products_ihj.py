@@ -6,11 +6,12 @@ import asyncio
 import logging
 import structlog
 import csv
+import json
 
 with open('prod_errors_ihj.text', 'w') as f:
     f.write('')
 
-with open('prod_csv_ihj.text', 'w') as f:
+with open('prod_ihj.csv', 'w') as f:
     f.write(f'')
 
 
@@ -30,7 +31,6 @@ set_arsenic_log_level()
 
 
 async def prod_parse_ihj(url, sema):
-    store_name = 'IHJ'
     service = services.Chromedriver()
     browser = browsers.Chrome()
     browser.capabilities = {"goog:chromeOptions": {"args": ["--headless", "--disable-logging", "--silent"]}}
@@ -54,16 +54,21 @@ async def prod_parse_ihj(url, sema):
 
         html = await session.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(html, "html.parser")
-        '''print(f'{soup.prettify()}')'''
+        # print(f'{soup.prettify()}')
 
         # get all the product divs
         product_divs = soup.find_all("div", class_=cn_prod_div)
+        json_script = soup.find("script", attrs={"type": True})
+
+        if json_script is not None:
+            json_script = json_script.text
+            parsed_json = json.loads(json_script)
 
         for data in soup(['svg', 'path', ' style', 'script', 'img', 'button']):
             # Remove tags
             data.decompose()
 
-        # parse the product divs
+        '''get HREF'''
         for product_div in product_divs:
             try:
                 # get link
@@ -75,6 +80,25 @@ async def prod_parse_ihj(url, sema):
             finally:
                 if prod_href is None:
                     await write_error('product_div', url, 'NONE TYPE')
+                    return
+
+            '''get location from json (city and zip)'''
+            try:
+                store_location = None
+                store_zip = None
+                print(f'trying JSON')
+                store_address = parsed_json.get('address')
+                store_location = store_address.get('addressLocality')
+                store_zip = store_address.get('postalCode')
+                print(f'Store Location: {store_location}\nStore Zip: {store_zip}')
+
+            except Exception as error:
+                await write_error('product_json_location/zip', url, error)
+                print(error)
+                time.sleep(5)
+            finally:
+                if store_location is None or store_zip is None:
+                    await write_error('product_json_location/zip', url, 'NONE TYPE')
                     return
 
             '''get name'''
@@ -212,7 +236,8 @@ async def prod_parse_ihj(url, sema):
 
             '''write the row'''
             try:
-                row = [f'{store_name}',
+                row = [f'{store_location}',
+                       f'{store_zip}',
                        f'{prod_name}',
                        f'{prod_strain}',
                        f'{prod_grower}',
@@ -228,13 +253,13 @@ async def prod_parse_ihj(url, sema):
                 return
 
             if row is not None:
-                with open('prod_csv_ihj.text', 'a', newline='') as csvfile:
+                with open('prod_ihj.csv', 'a', newline='') as csvfile:
                     csv_writer = csv.writer(csvfile, delimiter=',')
                     csv_writer.writerow(row)
 
 
 async def spawn_task(urls):
-    sema = asyncio.BoundedSemaphore(7)
+    sema = asyncio.BoundedSemaphore(1)  # was 7
     tasks = []
     for url in urls:
         tasks.append(asyncio.create_task(prod_parse_ihj(url, sema)))

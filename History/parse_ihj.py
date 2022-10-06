@@ -118,7 +118,7 @@ def prod_parse_ihj():
 
 def csv_write_row(row):
     # Create a csv file
-    with open('../prod_csv_all.csv', 'a', newline='') as csvfile:
+    with open('../prod_all.csv', 'a', newline='') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=',')
         csv_writer.writerow(row)
 

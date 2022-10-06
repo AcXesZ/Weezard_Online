@@ -10,14 +10,14 @@ import time
 
 
 try:
-    os.remove("prod_csv_all.csv")
+    os.remove("prod_all.csv")
 except Exception as error:
     pass
 
-with open('prod_csv_all.csv', 'w') as f:
+with open('prod_all.csv', 'w') as f:
     f.write('')
 
-with open('prod_csv_all.csv', 'a') as f:
+with open('prod_all.csv', 'a') as f:
     f.writelines('store name, name, strain, grower, type, price, weight, thc%, total mg, cost/mg\n')
 
 #set bs4 driver
@@ -269,13 +269,13 @@ def prod_parse_dut(filter):
 
 def csv_write_row(row):
     # Create a csv file
-    with open('prod_csv_all.csv', 'a', newline='') as csvfile:
+    with open('prod_all.csv', 'a', newline='') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=',')
         csv_writer.writerow(row)
 
 
 def html_write():
-    df1 = pd.read_csv('prod_csv_all.csv')
+    df1 = pd.read_csv('prod_all.csv')
     df1.drop_duplicates(inplace=True)
     #del df1[df1.columns[0]]
     df1.style.format(precision=3)

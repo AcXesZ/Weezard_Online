@@ -18,9 +18,9 @@ def get_menus_sun():
                 'https://www.sunnyside.shop/menu/pittsburgh-pa/products/flower'
                 ]
 
-    with open('urls_list_menus_sun.text', 'a') as f:
+    with open('urls_list_menus_sun.text', 'a') as f_urls:
         for url in base_urls:
-            f.writelines(
+            f_urls.writelines(
                 f'{url}?strain_types=sativa\n'
                 f'{url}?strain_types=indica\n'
                 f'{url}?strain_types=hybrid\n')
@@ -29,5 +29,3 @@ def get_menus_sun():
 if __name__ == '__main__':
     get_menus_sun()
     print(f'Execution time in seconds: {start_time - time.time()}')
-
-

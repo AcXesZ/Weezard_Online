@@ -2,7 +2,7 @@ import asyncio
 import time
 import logging
 
-from arsenic import get_session, keys, browsers, services
+from arsenic import get_session, browsers, services
 
 import structlog
 start_time = time.time()
@@ -10,8 +10,8 @@ start_time = time.time()
 
 menu_list_ihj = []
 
-'''with open('urls_list_menus_ihj.text', 'w') as f:
-    f.write('')'''
+with open('urls_list_menus_ihj.text', 'w') as f:
+    f.write('')
 
 
 def set_arsenic_log_level(level=logging.ERROR):
@@ -33,7 +33,7 @@ async def scraper(url, sema):
     print(f'Adding...{url}')
     service = services.Chromedriver()
     browser = browsers.Chrome()
-    browser.capabilities = {"goog:chromeOptions": {"args": ["--headless", "--disable-logging", "--silent" ]}}
+    browser.capabilities = {"goog:chromeOptions": {"args": ["--headless", "--disable-logging", "--silent"]}}
 
     async with sema, get_session(service, browser) as session:
         print(f'Trying...{url}')
@@ -41,9 +41,12 @@ async def scraper(url, sema):
         await asyncio.sleep(0.01)
         print(f'Got RAW from...{url}')
         html = await session.execute_script("return document.body.innerHTML")
-        #print(html)
+        # print(html)
         print(f'Got inner HTML for...{url}')
         await find_pa(url, html)
+
+        await session.close()
+        await session.driver.close()
 
 
 async def find_pa(url, html):
@@ -53,9 +56,12 @@ async def find_pa(url, html):
         menu_list_ihj.append(url)
         with open('urls_list_menus_ihj.text', 'a') as f:
             for url in menu_list_ihj:
-                f.writelines(f'{url}?refinementList%5Broot_types%5D%5B0%5D=flower&refinementList%5Bcategory%5D%5B0%5D=hybrid\n')
-                f.writelines(f'{url}?refinementList%5Broot_types%5D%5B0%5D=flower&refinementList%5Bcategory%5D%5B0%5D=indica\n')
-                f.writelines(f'{url}?refinementList%5Broot_types%5D%5B0%5D=flower&refinementList%5Bcategory%5D%5B0%5D=sativa\n')
+                f.writelines(f'{url}?refinementList%5Broot_types%5D%5B0%5D='
+                             f'flower&refinementList%5Bcategory%5D%5B0%5D=hybrid\n')
+                f.writelines(f'{url}?refinementList%5Broot_types%5D%5B0%5D='
+                             f'flower&refinementList%5Bcategory%5D%5B0%5D=indica\n')
+                f.writelines(f'{url}?refinementList%5Broot_types%5D%5B0%5D='
+                             f'flower&refinementList%5Bcategory%5D%5B0%5D=sativa\n')
 
 
 async def spawn_task(urls,):
@@ -69,10 +75,9 @@ async def spawn_task(urls,):
 def main():
 
     urls = []
-    for store_number in range(4600, 9999):
+    for store_number in range(6900, 9999):
         url = f'https://www.iheartjane.com/embed/stores/{store_number}/menu'
         urls.append(url)
-
 
     print('running tasks')
     time.sleep(1)

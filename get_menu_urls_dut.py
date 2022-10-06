@@ -30,12 +30,12 @@ def get_menus_dut():
             '''print(state)'''
             print('found pa')
 
-            pa_cities = state.find_all("a", class_= "link__StyledLink-hbyqoc-0 ktDwDx cities-by-state__CityPageLink-sc-1eosbd8-3 bQlMMm css-vurnku", href=True)
+            class_ = "link__StyledLink-hbyqoc-0 ktDwDx cities-by-state__CityPageLink-sc-1eosbd8-3 bQlMMm css-vurnku"
+            pa_cities = state.find_all("a", class_=class_, href=True)
 
-            city_links = []
             for city in pa_cities:
                 city_url = f'http://www.dutchie.com/{city["href"]}'
-                #print(f'city_url: {city_url}\n')
+                # print(f'city_url: {city_url}\n')
 
                 driver.get(city_url)
                 time.sleep(0.5)
@@ -47,15 +47,13 @@ def get_menus_dut():
                     print(link["href"])
                     if '-nj-' not in link["href"]:
 
-                        with open('urls_list_menus_dut.text', 'a') as f:
+                        with open('urls_list_menus_dut.text', 'a') as f_urls:
                             url = f'http://www.dutchie.com{link["href"]}'
                             print(f'Writing: {url}\n')
-                            f.write(url+"/products/flower?straintypes=hybrid\n")
-                            f.write(url + "/products/flower?straintypes=indica\n")
-                            f.write(url + "/products/flower?straintypes=sativa\n")
+                            f_urls.write(url+"/products/flower?straintypes=hybrid\n")
+                            f_urls.write(url + "/products/flower?straintypes=indica\n")
+                            f_urls.write(url + "/products/flower?straintypes=sativa\n")
 
 
 if __name__ == '__main__':
     get_menus_dut()
-
-
