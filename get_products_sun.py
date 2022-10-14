@@ -104,26 +104,34 @@ async def prod_parse_sun(url, sema):
                     return
 
             '''get product name'''
+            class_range = range(175, 225)
             try:
-                prod_name = btn.find('h4', class_="jss192")
-                print(f'Raw name : {prod_name}')
-                if prod_name is None:
-                    prod_name = btn.find('h4', class_="jss202")
+                prod_name = None
+
+                for num in class_range:
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_=f"jss{num}")
+                    '''
+                    prod_name = btn.find('h4', class_="jss192")
                     print(f'Raw name : {prod_name}')
-                if prod_name is None:
-                    prod_name = btn.find('h4', class_="jss185")
-                    print(f'Raw name : {prod_name}')
-                if prod_name is None:
-                    prod_name = btn.find('h4', class_="jss189")
-                    print(f'Raw name : {prod_name}')
-                if prod_name is None:
-                    prod_name = btn.find('h4', class_="jss183")
-                    print(f'Raw name : {prod_name}')
-                if prod_name is None:
-                    prod_name = btn.find('h4', class_="jss190")
-                    print(f'Raw name : {prod_name}')
-                if prod_name is None:
-                    prod_name = btn.find('h4', class_="jss200")
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_="jss202")
+                        print(f'Raw name : {prod_name}')
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_="jss185")
+                        print(f'Raw name : {prod_name}')
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_="jss189")
+                        print(f'Raw name : {prod_name}')
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_="jss183")
+                        print(f'Raw name : {prod_name}')
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_="jss190")
+                        print(f'Raw name : {prod_name}')
+                    if prod_name is None:
+                        prod_name = btn.find('h4', class_="jss200")
+                    '''
 
                 prod_name = prod_name.text
                 print(f'Raw name : {prod_name}')
