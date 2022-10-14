@@ -74,8 +74,8 @@ async def prod_parse_sun(url, sema):
         product_buttons = soup.select('button[data-cy="ProductListItem"]')
 
         for btn in product_buttons:
-            # soup = btn.prettify()
-            # print(f'{soup}\n')
+            soup = btn.prettify()
+            print(f'{soup}\n')
 
             # strain
             try:
@@ -106,16 +106,27 @@ async def prod_parse_sun(url, sema):
             '''get product name'''
             try:
                 prod_name = btn.find('h4', class_="jss192")
-
+                print(f'Raw name : {prod_name}')
                 if prod_name is None:
                     prod_name = btn.find('h4', class_="jss202")
+                    print(f'Raw name : {prod_name}')
                 if prod_name is None:
                     prod_name = btn.find('h4', class_="jss185")
+                    print(f'Raw name : {prod_name}')
                 if prod_name is None:
                     prod_name = btn.find('h4', class_="jss189")
+                    print(f'Raw name : {prod_name}')
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss183")
+                    print(f'Raw name : {prod_name}')
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss190")
+                    print(f'Raw name : {prod_name}')
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss200")
 
                 prod_name = prod_name.text
-                # print(f'Raw name : {prod_name}')
+                print(f'Raw name : {prod_name}')
             except Exception as error:
                 await write_error('prod_name', url, error)
             finally:
@@ -144,8 +155,6 @@ async def prod_parse_sun(url, sema):
                 for word in words_to_remove:
                     prod_name = prod_name.replace(word, '')
 
-                # print(f'product name: {prod_name}')
-                prod_name = prod_name.text
 
             except Exception as error:
                 await write_error('prod_type', url, error)
@@ -248,9 +257,6 @@ async def prod_parse_sun(url, sema):
             with open('prod_sun.csv', 'a', newline='') as csvfile:
                 csv_writer = csv.writer(csvfile, delimiter=',')
                 csv_writer.writerow(row)
-
-        await session.close()
-        await session.driver.close()
 
 
 async def spawn_task(urls):

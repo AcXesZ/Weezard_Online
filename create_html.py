@@ -55,7 +55,7 @@ def html_write():
                    'THC mg',
                    '$/mg',
                    ]
-    del df1[df1.columns[0]]
+    # del df1[df1.columns[0]]
     # print("The dataframe is:")
     # print(df1)
 
