@@ -281,9 +281,6 @@ async def prod_parse_dut(url, sema):
                 csv_writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE, quotechar='', escapechar='\\')
                 csv_writer.writerow(row)
 
-        await session.close()
-        await session.driver.close()
-
 
 async def spawn_task(urls):
     sema = asyncio.BoundedSemaphore(2)

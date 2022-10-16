@@ -41,18 +41,29 @@ async def prod_parse_sun(url, sema):
 
         await session.get(url)
         await asyncio.sleep(5)
+        total_height = int(await session.execute_script("return document.body.scrollHeight"))
+        for i in range(1, total_height, 5):
+            await session.execute_script("window.scrollTo(0, {});".format(i))
+        await asyncio.sleep(3)
 
         html = await session.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(html, "html.parser")
 
+        # print(soup.prettify())
+
         '''get store location'''
         try:
             store_location = None
-            store_location = soup.find('p', class_="Dropdown__StlStoreName-sc-t2betb-1")
+            store_location = soup.find('p', class_="Dropdown__StlStoreName-sc-t2betb-1 jqTmLQ jss28")
             store_location = store_location.text
             store_location = store_location.replace(', PA', '')
             # print(f'Raw store name: {store_name}')
             store_location = store_location.strip()
+
+            # chicago gets in here.  ignore it
+            if 'Chicago' in store_location:
+                return
+
         except Exception as error:
             await write_error('store_name', url, error)
         finally:
@@ -63,9 +74,21 @@ async def prod_parse_sun(url, sema):
         '''get store zip'''
         try:
             store_zip = None
-            store_zip = 00000
+            with open('zipcodes.csv', 'r') as f_zips:
+                zips = csv.reader(f_zips, delimiter=',')
+                word_list = store_location.split(' ')
+
+                for zip_line in zips:
+                    if store_zip is None:
+                        town = zip_line[1]
+                        for word in word_list:
+                            word = word.upper()
+                            if 'OF' not in word:
+                                if word in town:
+                                    store_zip = zip_line[0]
+                                    print(f'Store Zip: {store_zip}')
         except Exception as error:
-            await write_error('store_zip', url, error)
+            await write_error(f'store_zip\n{store_zip}', url, error)
         finally:
             if store_zip is None:
                 await write_error('store_zip', url, 'NONE TYPE')
@@ -74,8 +97,8 @@ async def prod_parse_sun(url, sema):
         product_buttons = soup.select('button[data-cy="ProductListItem"]')
 
         for btn in product_buttons:
-            soup = btn.prettify()
-            print(f'{soup}\n')
+            # soup = btn.prettify()
+            # print(f'{soup}\n')
 
             # strain
             try:
@@ -104,42 +127,34 @@ async def prod_parse_sun(url, sema):
                     return
 
             '''get product name'''
-            class_range = range(175, 225)
             try:
                 prod_name = None
 
-                for num in class_range:
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_=f"jss{num}")
-                    '''
-                    prod_name = btn.find('h4', class_="jss192")
-                    print(f'Raw name : {prod_name}')
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_="jss202")
-                        print(f'Raw name : {prod_name}')
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_="jss185")
-                        print(f'Raw name : {prod_name}')
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_="jss189")
-                        print(f'Raw name : {prod_name}')
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_="jss183")
-                        print(f'Raw name : {prod_name}')
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_="jss190")
-                        print(f'Raw name : {prod_name}')
-                    if prod_name is None:
-                        prod_name = btn.find('h4', class_="jss200")
-                    '''
+                class_list = ["jss183", "jss184", "jss187", "jss190", "jss194"]
 
-                prod_name = prod_name.text
-                print(f'Raw name : {prod_name}')
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss183")
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss184")
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss187")
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss190")
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss194")
+                if prod_name is None:
+                    prod_name = btn.find('h4', class_="jss200")
+
+                if prod_name is not None:
+                    prod_name = prod_name.text.rstrip()
+
+                # print(f'Raw name : {prod_name}')
             except Exception as error:
                 await write_error('prod_name', url, error)
             finally:
                 if prod_name is None:
-                    await write_error('prod_name', url, 'NONE TYPE')
+                    await write_error(f'prod_name\n{btn}\n', url, 'NONE TYPE')
+                    # print(soup.prettify())
                     return
 
             '''get product type'''
@@ -160,12 +175,17 @@ async def prod_parse_sun(url, sema):
                 # print(f'Product type: {prod_type}')
 
                 words_to_remove = ['Flower', 'Lightly', 'Ground', 'Smalls', 'Small', 'Trim', 'Fine']
-                for word in words_to_remove:
-                    prod_name = prod_name.replace(word, '')
+                if prod_name is not None:
+                    for word in words_to_remove:
+                        # print('removing words')
+                        # print(type(prod_name))
+                        prod_name = prod_name.replace(word, '')
 
+                # print(f'product name: {prod_name}')
 
             except Exception as error:
-                await write_error('prod_type', url, error)
+                print(error.with_traceback())
+                await write_error(f'prod_type\n{btn.text}\n', url, error)
             finally:
                 if prod_type is None:
                     await write_error('prod_type', url, 'NONE TYPE')

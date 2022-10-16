@@ -22,8 +22,8 @@ with open('prod_sun.csv', 'r') as f:
     prod_list_sun = list(set(prod_list_sun))
     print(f'SUN has {len(prod_list_sun)} entries.')
 
-prod_list_master = prod_list_dut
-prod_list_master += prod_list_ihj
+# prod_list_master = prod_list_dut
+prod_list_master = prod_list_ihj
 prod_list_master += prod_list_sun
 
 print(len(prod_list_master))

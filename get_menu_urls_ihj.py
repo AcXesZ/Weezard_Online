@@ -45,9 +45,6 @@ async def scraper(url, sema):
         print(f'Got inner HTML for...{url}')
         await find_pa(url, html)
 
-        await session.close()
-        await session.driver.close()
-
 
 async def find_pa(url, html):
     print(f'Checking...{url}')
