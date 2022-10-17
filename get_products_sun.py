@@ -9,7 +9,7 @@ import csv
 start_time = time.time()
 
 '''delete all data from error and product files'''
-with open('prod_errors_sun.text', 'w') as f:
+with open('errors_sun.text', 'w') as f:
     f.write('')
 
 with open('prod_sun.csv', 'w') as f:
@@ -296,7 +296,7 @@ async def spawn_task(urls):
 
 
 async def write_error(problem, url, error):
-    with open('prod_errors_sun.text', 'a') as f_error:
+    with open('errors_sun.text', 'a') as f_error:
         f_error.write(f'{url}\n{problem}\n{error}\n\n')
 
 

@@ -62,8 +62,21 @@
                         <a class="toggle-vis" data-column="9">THC%</a> -
                         <a class="toggle-vis" data-column="10">THC mg</a> -
                         <a class="toggle-vis" data-column="11">$/mg</a> -
-
     </div>
+    <form action="action_to_perform_after_submission" method = "POST">
+        <label for="Zip">Zip:</label>
+        <input type="text" id="zip" name="name" required minlength="5" maxlength="5" size="5">
+
+        <label for="Zip_radius">Within:</label>
+            <select name="zip_radius" id="zip_radius">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+        <input type="submit" value="Search" />
+    </form>
         {{body}}
     </body>
 </html>
