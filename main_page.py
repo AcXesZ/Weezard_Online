@@ -1,20 +1,20 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 
-app = Flask(__name__)
-
-
-@app.route('/form')
-def form():
-    return render_template('templates/template.html')
-
-
-@app.route('/data/', methods=['POST'])
-def data():
-    if request.method == 'GET':
-        return f"The URL /data is accessed directly. Try going to '/form' to submit form"
-    if request.method == 'POST':
-        form_data = request.form
-        return render_template('data.html', form_data=form_data)
+app = Flask(__name__, template_folder="templates")
+app.config.from_object(__name__)
+# configuration
+DATABASE = '/tmp/flaskr.db'
+DEBUG = True
+SECRET_KEY = 'development key'
+USERNAME = 'admin'
+PASSWORD = 'default'
 
 
-app.run(host='localhost', port=5000)
+
+@app.route('/')
+def hello_world():
+    return render_template('prod_table.html')
+
+
+if __name__ == '__main__':
+    app.run()
