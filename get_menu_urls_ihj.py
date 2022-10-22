@@ -38,7 +38,7 @@ async def scraper(url, sema):
     async with sema, get_session(service, browser) as session:
         print(f'Trying...{url}')
         await session.get(url)
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(2)
         print(f'Got RAW from...{url}')
         html = await session.execute_script("return document.body.innerHTML")
         # print(html)
@@ -72,7 +72,7 @@ async def spawn_task(urls,):
 def main():
 
     urls = []
-    for store_number in range(6900, 9999):
+    for store_number in range(1, 6900):
         url = f'https://www.iheartjane.com/embed/stores/{store_number}/menu'
         urls.append(url)
 
