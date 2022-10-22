@@ -9,7 +9,7 @@ import csv
 start_time = time.time()
 
 '''delete all data from error and product files'''
-with open('prod_errors_sun.text', 'w') as f:
+with open('errors_sun.text', 'w') as f:
     f.write('')
 
 with open('prod_sun.csv', 'w') as f:
@@ -48,7 +48,6 @@ async def prod_parse_sun(url, sema):
 
         html = await session.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(html, "html.parser")
-
         # print(soup.prettify())
 
         '''get store location'''
@@ -57,8 +56,8 @@ async def prod_parse_sun(url, sema):
             store_location = soup.find('p', class_="Dropdown__StlStoreName-sc-t2betb-1 jqTmLQ jss28")
             store_location = store_location.text
             store_location = store_location.replace(', PA', '')
-            # print(f'Raw store name: {store_name}')
             store_location = store_location.strip()
+            store_location = 'Sunnyside - ' + store_location
 
             # chicago gets in here.  ignore it
             if 'Chicago' in store_location:
@@ -296,7 +295,7 @@ async def spawn_task(urls):
 
 
 async def write_error(problem, url, error):
-    with open('prod_errors_sun.text', 'a') as f_error:
+    with open('errors_sun.text', 'a') as f_error:
         f_error.write(f'{url}\n{problem}\n{error}\n\n')
 
 
